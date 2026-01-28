@@ -14,7 +14,8 @@ export const businessData = {
         { title: "Hamburguesa Doble", desc: "Doble carne 150g, doble cheddar, bacon crocante.", price: "$3500" },
         { title: "La Vegetariana", desc: "Medallón de lentejas, lechuga, tomate y mayonesa de palta.", price: "$3200" },
         { title: "Papas Criminales", desc: "Papas bastón con cheddar fundido, verdeo y trocitos de panceta.", price: "$2500" },
-        { title: "Gaseosa 500ml", desc: "Línea Coca-Cola o Pepsi.", price: "$1000" }
+        { title: "Gaseosa 500ml", desc: "Línea Coca-Cola o Pepsi.", price: "$1000" },
+        { title: "Gaseosa 500ml", desc: "Línea Fanta o 7up.", price: "$1000" }
       ]
     },
     {
