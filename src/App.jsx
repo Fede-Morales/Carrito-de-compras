@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
 import { businessData } from '../data';
+import { useState, useEffect } from 'react'; // Asegurate de tener useEffect aquí
+import { db } from './firebase';
+import { collection, getDocs } from 'firebase/firestore'; // Aquí es donde faltaba getDocs
 
 const Icons = {
   menu: () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>,
@@ -11,6 +13,8 @@ const Icons = {
 export default function App() {
   const [activeTabId, setActiveTabId] = useState(businessData.tabs[0].id);
   const [cart, setCart] = useState([]);
+  const [products, setProducts] = useState([]); // Aquí guardaremos los productos de Firebase
+  const [loading, setLoading] = useState(true);
 
   // --- FUNCIONES DEL CARRITO ---
   const addToCart = (product) => {
@@ -62,6 +66,43 @@ export default function App() {
   // 5. Abrimos WhatsApp
   window.open(`https://wa.me/${businessData.phone}?text=${encodedMessage}`, '_blank');
 };
+
+  // --- FILTRADO DE PRODUCTOS SEGÚN LA TAB ---
+  // Filtramos los productos que coincidan con la categoría (tab) activa
+  const filteredItems = products.length > 0 ? products : [];
+
+  console.log("ID de Tab Activa:", activeTabId);
+  console.log("Items filtrados para mostrar:", filteredItems);
+
+useEffect(() => {
+  const fetchProducts = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "productos"));
+     
+      const docs = querySnapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data() 
+      }));
+       console.log("Productos traídos de Firebase:", docs);
+      setProducts(docs);
+
+    } catch (error) {
+      console.error("Error al cargar productos:", error);
+    } finally {
+      setLoading(false); // Ahora sí va a funcionar porque declaramos el estado arriba
+    }
+  };
+
+  fetchProducts();
+}, []);
+
+if (loading) {
+  return (
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center font-sans">
+      <div className="text-slate-400 animate-pulse font-bold">Cargando catálogo...</div>
+    </div>
+  );
+}
 
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center p-0 sm:p-4 font-sans text-slate-900">
@@ -115,23 +156,23 @@ export default function App() {
             <div className="animate-in fade-in duration-300">
               <h2 className="text-xs font-bold uppercase tracking-widest mb-6 opacity-40">{activeContent.label}</h2>
               {activeContent.type === 'list' ? (
-                <div className="space-y-6">
-                  {activeContent.items.map((item, i) => (
-                    <div key={i} className="flex justify-between items-start border-b border-slate-50 pb-4">
-                      <div className="flex-1 pr-4">
-                        <h3 className="font-bold text-slate-800">{item.title}</h3>
-                        <p className="text-xs text-slate-500">{item.desc}</p>
-                        <p className="text-sm font-bold mt-1" style={{ color: businessData.themeColor }}>{item.price}</p>
-                      </div>
-                      <button 
-                        onClick={() => addToCart(item)}
-                        className="bg-slate-900 text-white p-2 rounded-xl active:scale-90 transition-transform"
-                      >
-                        <Icons.cart />
-                      </button>
+              <div className="space-y-6">
+                {filteredItems.map((item) => (
+                  <div key={item.id} className="flex justify-between items-start border-b border-slate-50 pb-4">
+                    <div className="flex-1 pr-4">
+                      <h3 className="font-bold text-slate-800">{item.title}</h3>
+                      <p className="text-xs text-slate-500">{item.desc}</p>
+                      <p className="text-sm font-bold mt-1 text-blue-600">{item.price}</p>
                     </div>
-                  ))}
-                </div>
+                    <button 
+                      onClick={() => addToCart(item)}
+                      className="bg-slate-900 text-white p-2 rounded-xl active:scale-90 transition-transform"
+                    >
+                      <Icons.cart />
+                    </button>
+                  </div>
+                ))}
+              </div>
               ) : (
                 <div className="bg-slate-50 p-5 rounded-2xl text-sm whitespace-pre-line">{activeContent.content}</div>
               )}
